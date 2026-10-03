@@ -1,0 +1,113 @@
+NOTE DU MEMBRE 2 POUR L'EQUIPE
+Projet Data Science - Diabetes 130-US Hospitals
+Etape 2 - Outliers, distributions et transformations
+=====================================================================
+
+FICHIER TRANSMIS : data_etape2b.csv
+  - 69 987 sejours (1 sejour par patient, decision du membre 1)
+  - 56 colonnes = 50 colonnes du membre 1 + 6 nouvelles colonnes "_log"
+  - Aucune ligne supprimee a cette etape
+  - Les colonnes d'origine sont TOUJOURS presentes (rien n'a ete ecrase)
+
+
+---------------------------------------------------------------------
+!!! IMPORTANT POUR TOUT LE MONDE : COMMENT LIRE LE FICHIER !!!
+---------------------------------------------------------------------
+
+Utilisez EXACTEMENT cette ligne :
+
+    df = pd.read_csv('data_etape2b.csv', keep_default_na=False, na_values=[''], low_memory=False)
+
+Pourquoi : avec un pd.read_csv normal, pandas transforme le texte "None"
+en valeur manquante (NaN). Or dans A1Cresult et max_glu_serum, "None"
+veut dire "examen non realise" : c'est une information, pas un manquant.
+
+Verification : apres lecture, df['A1Cresult'].value_counts() doit afficher
+"None 57141". Si "None" n'apparait pas, la lecture est fausse.
+
+Les seules valeurs manquantes normales sont dans diag_1 (10), diag_2 (293)
+et diag_3 (1224) : elles sont pour le membre 3.
+
+
+---------------------------------------------------------------------
+CE QUI A ETE FAIT (membre 2)
+---------------------------------------------------------------------
+
+1. Valeurs impossibles : aucune (pas de negatif, durees entre 1 et 14 jours).
+   -> Aucune suppression.
+
+2. Outliers (regle IQR) : jusqu'a 13 % pour les variables de visites,
+   mais 87 a 93 % de leurs valeurs valent 0 (Q1 = Q3 = 0).
+   Ce sont des patients reels, souvent les plus a risque.
+   -> Aucune suppression.
+
+3. Transformation log1p ajoutee sur 6 variables (nouvelles colonnes) :
+      number_outpatient  -> number_outpatient_log
+      number_emergency   -> number_emergency_log
+      number_inpatient   -> number_inpatient_log
+      num_medications    -> num_medications_log
+      time_in_hospital   -> time_in_hospital_log
+      num_procedures     -> num_procedures_log
+
+   PAS transformees (le log aggraverait leur asymetrie) :
+      num_lab_procedures, number_diagnoses
+
+4. Valeurs suspectes conservees et signalees :
+      num_lab_procedures = 1 (2 254 sejours)
+      number_diagnoses = 9 (43,9 % des sejours, probable limite du systeme)
+
+5. Scaling choisi : StandardScaler
+   -> PAS applique dans le fichier (voir consignes ci-dessous).
+
+
+---------------------------------------------------------------------
+CONSIGNES PAR MEMBRE
+---------------------------------------------------------------------
+
+MEMBRE 3 (categorielles + feature engineering)
+  - Lire le fichier avec la ligne ci-dessus.
+  - Ne pas toucher aux 8 variables numeriques ni aux colonnes "_log".
+  - A traiter : diag_1/2/3 (dont leurs NaN), A1Cresult, max_glu_serum,
+    age, medicaments, encodage des categorielles.
+  - Transmettre ensuite le fichier au membre 4 et au membre 5.
+
+MEMBRE 4 (segmentation)
+  - Utiliser les colonnes "_log" A LA PLACE des colonnes d'origine
+    pour les 6 variables listees au point 3.
+  - Garder num_lab_procedures et number_diagnoses telles quelles.
+  - Appliquer StandardScaler sur toutes les donnees avant K-Means
+    (pas de train/test en clustering, donc pas de fuite de donnees).
+  - Pour INTERPRETER les clusters, utiliser les colonnes d'origine
+    ("3 hospitalisations" se comprend, "1,39" non).
+
+MEMBRE 5 (classification)
+  - Utiliser les colonnes "_log" A LA PLACE des colonnes d'origine
+    pour les 6 variables listees au point 3.
+  - Ne pas mettre les colonnes d'origine ET les "_log" en meme temps
+    dans le modele (ce serait la meme information deux fois).
+  - StandardScaler DANS le Pipeline scikit-learn, ajuste sur le TRAIN
+    uniquement (sinon fuite de donnees).
+  - Rappel : le jeu contient deja 1 seul sejour par patient
+    (decision du membre 1), donc un split train/test classique suffit.
+  - Taux de readmission apres nettoyage : 9,0 % -> cible tres desequilibree,
+    utiliser recall, F1 et ROC-AUC (pas l'accuracy).
+
+MEMBRE 1 (integration finale)
+  - Dans votre notebook, deux cellules Markdown ont des chiffres calcules
+    AVANT la suppression des patients repetes. A corriger avec les
+    resultats affiches juste au-dessus :
+      * "Missing" payer_code / medical_specialty :
+        ecrit 11,7-11,8 % contre 11,0-11,2 %
+        -> reel 9,2-9,9 % contre 8,3-8,7 %
+      * "Unknown" race :
+        ecrit 2,2 % ; 8,4 % contre 11,5 %
+        -> reel 2,7 % ; 7,4 % contre 9,0 %
+    Les decisions restent valables, seuls les chiffres changent.
+
+
+---------------------------------------------------------------------
+PRESENTATION
+---------------------------------------------------------------------
+Le membre 2 assemble les slides. Chacun envoie ses 2 slides
+(sa partie, 2 minutes de parole) au plus tard samedi matin.
+Un modele commun (couleurs, police) sera envoye avant.
